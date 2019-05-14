@@ -37,7 +37,8 @@ plot(x30,f30)
 
 %---------------------------------------------------
 i=1;
-for c=linspace(10^-5,10^-1,50)
+sigma = logspace(-5,-1,50);
+for c=sigma
     rmsc(i,1)=1000;
     mrsc(i,1)=1000;
     for n=5:55
@@ -49,9 +50,10 @@ for c=linspace(10^-5,10^-1,50)
             rms(n,k) = (norm((f-y),2)/norm(y,2));
             mrs(n,k) = (norm((f-y),inf)/norm(y,inf));
             
-            yc=y+randn(n,1)*chol(c);
+            yc=y+randn(n,1)*c;
             pc=paramiter(F,yc);
             fc=(sum(F'.*pc))';
+            
             a=norm((fc-yc),2)/norm(yc,2);
             if(a<rmsc(i,1))
                 rmsc(i,1) = a;
@@ -72,9 +74,39 @@ end
     
 figure('name','rms')
 surf(log10(rms));
+xlabel('K');
+ylabel('N');
+zlabel('RMS');
 
 figure('name','mrs')
-surf(log10(mrs))
+surf(log10(mrs));
+xlabel('K');
+ylabel('N');
+zlabel('MAX');
+
+
+
+a = polyfit(sigma,rmsc(:,1)',1);
+b = logspace(-5,-1);
+c = (polyval(a,b));
+
+figure
+set(gca, 'XScale', 'log')
+loglog(sigma,rmsc(:,1),'o');
+hold on
+loglog(b,c);
+
+
+a = polyfit(sigma,mrsc(:,1)',1);
+b = logspace(-5,-1);
+c = (polyval(a,b));
+
+figure
+set(gca, 'XScale', 'log')
+loglog(sigma,mrsc(:,1),'o');
+hold on
+loglog(b,c);
+
 
 
 %-----------------------------------------------------
@@ -105,22 +137,3 @@ for k=3:K
     F(:,k) = 2*x.*F(:,k-1) - F(:,k-2);
 end
 end
-
-
-
-% function [out] = chebyshev(n,x)
-% %UNTITLED7 Summary of this function goes here
-% %   Detailed explanation goes here
-% out(1) = x;
-% if n == 1 
-%     return
-% end
-% out(2) = 2*x^2 - 1;    
-% if n == 2
-%     return;
-% end
-% for i=3:n
-% out(i) = 2*x*out(i-1) - out(i-2);
-% end
-% end
-
