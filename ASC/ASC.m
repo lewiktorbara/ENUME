@@ -13,39 +13,36 @@ Bu = [I-(5/36)*h*A, ((sqrt(15)/15)-(2/9))*h*A, ((sqrt(15)/30)-5/36)*h*A;
       -(5/36 + sqrt(15)/30)*h*A, -(2/9 + sqrt(15)/15)*h*A, I-(5/36)*h*A];
 
   
-opts = odeset('Reltol',exp(-13),'AbsTol',exp(-14),'Stats' ,'on');
-t = linspace(0,10,1001);
-[ode_t, ode_y] = ode113(@fun,t,y0',opts);
+opts = odeset('Reltol',10^(-13),'AbsTol',10^(-14),'Stats' ,'on');
+t = 0:h:10;
+[ode_t, ode_y] = ode113(@fun,[0 10],y0',opts);
 
 
   
-iterator = 2;
-for i=0.01:h:10
-    F(:,iterator) = Bu\[A*u(:,iterator-1);A*u(:,iterator-1) ;A*u(:,iterator-1)];
-    u(:,iterator) = u(:,iterator-1) + h*((5/18)*F(1:2,iterator) + (4/9)*F(3:4,iterator) +(5/18)*F(5:6,iterator));
+
+for i=2:length(t)
+    F(:,i) = Bu\[A*u(:,i-1);A*u(:,i-1) ;A*u(:,i-1)];
+    u(:,i) = u(:,i-1) + h*((5/18)*F(1:2,i) + (4/9)*F(3:4,i) +(5/18)*F(5:6,i));
         
-    ye(:,iterator) = ye(:,iterator-1) + A*h*ye(:,iterator-1);
-    
-    iterator = iterator +1;
+    ye(:,i) = ye(:,i-1) + A*h*ye(:,i-1);
     
 end
 
 figure('name','1')
-plot(t,u(1,:));
+plot(t,u(1,:),'-o');
 hold on
-plot(t, ode_y(:,1));
+plot(t,ye(1,:),'-o');
+hold on
+plot(ode_t, ode_y(:,1),'-');
 hold off
+legend('GAUSS-LEGENDRE','EULER','ODE113')
 
-figure('name','2')
-plot(t,ye(1,:));
-hold on
-plot(t, ode_y(:,1));
-hold off
+
 
 
 
 %------------------------------------------------------------   
-hspace = logspace(-4,-1,100);
+hspace = [logspace(-5,0,20) 2 3 4 5];
 iter = 1;    
 for h=hspace
     clear u1 ode1_y t1 ode1_t F ye1;
@@ -57,19 +54,16 @@ for h=hspace
       -(5/36 + sqrt(15)/30)*h*A, -(2/9 + sqrt(15)/15)*h*A, I-(5/36)*h*A];
 
 
-    t1 = linspace(0,10,size(0.01:h:10,2)+1);
+    t1 = 0:h:10;
     [ode1_t, ode1_y] = ode113(@fun,t1,y0',opts);
 
 
-  
-    iterator = 2;
-    for i=0.01:h:10
-        F(:,iterator) = Bu\[A*u1(:,iterator-1);A*u1(:,iterator-1) ;A*u1(:,iterator-1)];
-        u1(:,iterator) = u1(:,iterator-1) + h*((5/18)*F(1:2,iterator) + (4/9)*F(3:4,iterator) +(5/18)*F(5:6,iterator));
+ 
+    for i=2:length(t1)
+        F(:,i) = Bu\[A*u1(:,i-1);A*u1(:,i-1) ;A*u1(:,i-1)];
+        u1(:,i) = u1(:,i-1) + h*((5/18)*F(1:2,i) + (4/9)*F(3:4,i) +(5/18)*F(5:6,i));
         
-        ye1(:,iterator) = ye1(:,iterator-1) + A*h*ye1(:,iterator-1);
-        
-        iterator = iterator +1;
+        ye1(:,i) = ye1(:,i-1) + A*h*ye1(:,i-1);
         
     end
       
@@ -83,16 +77,16 @@ for h=hspace
 end
 
 figure('name','RMS');
-loglog(hspace, rms);
+loglog(hspace, rms,'-o');
+hold on
+loglog(hspace, rmse);
+legend('RMS GAUSS-LEGENDRE','RMS EULER')
 
 figure('name','MAX ERROR');
-loglog(hspace, maxer);
-
-figure('name','RMS EULER');
-loglog(hspace, rmse);
-
-figure('name','MAX ERROR EULER');
+loglog(hspace, maxer,'-o');
+hold on
 loglog(hspace, maxere);
+legend('MAX GAUSS-LEGENDRE','MAX EULER')
 
 
 function dydt = fun(t,y)
